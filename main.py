@@ -1,13 +1,14 @@
-import torch 
+
 from transformers import AutoTokenizer, AutoModelForCausalLM
+import torch
 
-model_name="TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 
-print("loading model..")
+print("Loading model...")
 
-tokenizer=AutoTokenizer.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-model=AutoModelForCausalLM.from_pretrained(
+model = AutoModelForCausalLM.from_pretrained(
     model_name,
     torch_dtype=torch.float16,
     device_map="auto"
@@ -16,20 +17,21 @@ model=AutoModelForCausalLM.from_pretrained(
 print("Model loaded!")
 
 while True:
-    user_input=input("You: ")
-    system_prompt="You are a helpful assistant."
-    prompt=f"{system_prompt}\nUser:{user_input}\nAssistant:"
+    user_input = input("You: ")
 
-    if user_input.lower()=="exit":
+    if user_input.lower() == "exit":
         break
 
-    inputs=tokenizer(prompt,return_tensors="pt").to(model.device)
+    prompt = f"User: {user_input}\nAssistant:"
 
-    output=model.generate(
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+
+    output = model.generate(
         **inputs,
         max_new_tokens=100
     )
 
-    response=tokenizer.decode(output[0],skip_special_tokens=True)
-    print("response:",response)
-    # print("Bot: ", response)
+    input_length=inputs["input_ids"].shape[-1]
+    response = tokenizer.decode(output[0][input_length:], skip_special_tokens=True)
+
+    print("Bot:", response)
